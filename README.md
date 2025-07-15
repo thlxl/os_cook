@@ -1,6 +1,6 @@
 # os_cook
 个人学习自用
-一个基于 **Cortex-M3/M4** 平台开发的 RTOS，参考 FreeRTOS 设计，适合学习嵌入式实时系统开发。
+一个基于 **Cortex-M3/M4** 平台开发的 RTOS，参考 FreeRTOS 设计，适合学习嵌入式实时系统开发，里面有详细代码注释。
 
 ---
 开发环境：keil MDK（ARM Compiler 6）
