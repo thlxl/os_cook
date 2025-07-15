@@ -1,0 +1,53 @@
+Dependencies for Project 'os', Target 'kernel': (DO NOT MODIFY !)
+CompilerVersion: 6190000::V6.19::ARMCLANG
+F (..\cortex-m3\port.c)(0x687618A9)(-xc -std=c99 --target=arm-arm-none-eabi -mcpu=cortex-m3 -c-fno-rtti -funsigned-char -fshort-enums -fshort-wchar-D__MICROLIB -gdwarf-4 -O1 -ffunction-sections -Wno-packed -Wno-missing-variable-declarations -Wno-missing-prototypes -Wno-missing-noreturn -Wno-sign-conversion -Wno-nonportable-include-path -Wno-reserved-id-macro -Wno-unused-macros -Wno-documentation-unknown-command -Wno-documentation -Wno-license-management -Wno-parentheses-equality -Wno-reserved-identifier -I ../cortex-m3/include -I E:/os_cook -I ../cortex-m3/bsp-ID:/Keil5/Keil_MDK538a/pack/Keil/STM32F1xx_DFP/2.4.0/Device/Include-D__UVISION_VERSION="538" -DSTM32F10X_MD-o ./objects/port.o -MD)
+I (..\cortex-m3\include\cm3.h)(0x6876096D)
+I (E:\os_cook\config.h)(0x68761893)
+I (E:\os_cook\type.h)(0x68760845)
+I (D:\Keil5\Keil_MDK538a\ARM\ARMCLANG\include\arm_acle.h)(0x63884908)
+I (D:\Keil5\Keil_MDK538a\ARM\ARMCLANG\include\stdint.h)(0x63884908)
+I (..\cortex-m3\include\systick.h)(0x6874D4FC)
+I (D:\Keil5\Keil_MDK538a\ARM\ARMCLANG\include\stdio.h)(0x63884908)
+F (..\cortex-m3\systick.c)(0x6874F20C)(-xc -std=c99 --target=arm-arm-none-eabi -mcpu=cortex-m3 -c-fno-rtti -funsigned-char -fshort-enums -fshort-wchar-D__MICROLIB -gdwarf-4 -O1 -ffunction-sections -Wno-packed -Wno-missing-variable-declarations -Wno-missing-prototypes -Wno-missing-noreturn -Wno-sign-conversion -Wno-nonportable-include-path -Wno-reserved-id-macro -Wno-unused-macros -Wno-documentation-unknown-command -Wno-documentation -Wno-license-management -Wno-parentheses-equality -Wno-reserved-identifier -I ../cortex-m3/include -I E:/os_cook -I ../cortex-m3/bsp-ID:/Keil5/Keil_MDK538a/pack/Keil/STM32F1xx_DFP/2.4.0/Device/Include-D__UVISION_VERSION="538" -DSTM32F10X_MD-o ./objects/systick.o -MD)
+I (..\cortex-m3\include\systick.h)(0x6874D4FC)
+I (E:\os_cook\config.h)(0x68761893)
+I (E:\os_cook\type.h)(0x68760845)
+I (..\cortex-m3\include\cm3.h)(0x6876096D)
+I (D:\Keil5\Keil_MDK538a\ARM\ARMCLANG\include\arm_acle.h)(0x63884908)
+I (D:\Keil5\Keil_MDK538a\ARM\ARMCLANG\include\stdint.h)(0x63884908)
+F (..\cortex-m3\bsp\stm32f10_Init.c)(0x68734423)(-xc -std=c99 --target=arm-arm-none-eabi -mcpu=cortex-m3 -c-fno-rtti -funsigned-char -fshort-enums -fshort-wchar-D__MICROLIB -gdwarf-4 -O1 -ffunction-sections -Wno-packed -Wno-missing-variable-declarations -Wno-missing-prototypes -Wno-missing-noreturn -Wno-sign-conversion -Wno-nonportable-include-path -Wno-reserved-id-macro -Wno-unused-macros -Wno-documentation-unknown-command -Wno-documentation -Wno-license-management -Wno-parentheses-equality -Wno-reserved-identifier -I ../cortex-m3/include -I E:/os_cook -I ../cortex-m3/bsp-ID:/Keil5/Keil_MDK538a/pack/Keil/STM32F1xx_DFP/2.4.0/Device/Include-D__UVISION_VERSION="538" -DSTM32F10X_MD-o ./objects/stm32f10_init.o -MD)
+I (..\cortex-m3\bsp\stm32f10_registers.h)(0x68760759)
+F (..\cortex-m3\bsp\stm32f10_serial.c)(0x68761840)(-xc -std=c99 --target=arm-arm-none-eabi -mcpu=cortex-m3 -c-fno-rtti -funsigned-char -fshort-enums -fshort-wchar-D__MICROLIB -gdwarf-4 -O1 -ffunction-sections -Wno-packed -Wno-missing-variable-declarations -Wno-missing-prototypes -Wno-missing-noreturn -Wno-sign-conversion -Wno-nonportable-include-path -Wno-reserved-id-macro -Wno-unused-macros -Wno-documentation-unknown-command -Wno-documentation -Wno-license-management -Wno-parentheses-equality -Wno-reserved-identifier -I ../cortex-m3/include -I E:/os_cook -I ../cortex-m3/bsp-ID:/Keil5/Keil_MDK538a/pack/Keil/STM32F1xx_DFP/2.4.0/Device/Include-D__UVISION_VERSION="538" -DSTM32F10X_MD-o ./objects/stm32f10_serial.o -MD)
+I (..\cortex-m3\bsp\stm32f10_serial.h)(0x68734C47)
+I (D:\Keil5\Keil_MDK538a\ARM\ARMCLANG\include\stdio.h)(0x63884908)
+I (..\cortex-m3\bsp\stm32f10_registers.h)(0x68760759)
+F (..\cortex-m3\startup.s)(0x68738BF3)(--target=arm-arm-none-eabi -mcpu=cortex-m3 -masm=auto  -Wa,armasm,--diag_suppress=A1950W -c-gdwarf-4 -Wa,armasm,--pd,"__MICROLIB SETA 1"-ID:/Keil5/Keil_MDK538a/pack/Keil/STM32F1xx_DFP/2.4.0/Device/Include-Wa,armasm,--pd,"__UVISION_VERSION SETA 538" -Wa,armasm,--pd,"STM32F10X_MD SETA 1"-o ./objects/startup.o)
+F (..\cortex-m3\intr.s)(0x68763AC6)(--target=arm-arm-none-eabi -mcpu=cortex-m3 -masm=auto  -Wa,armasm,--diag_suppress=A1950W -c-gdwarf-4 -Wa,armasm,--pd,"__MICROLIB SETA 1"-ID:/Keil5/Keil_MDK538a/pack/Keil/STM32F1xx_DFP/2.4.0/Device/Include-Wa,armasm,--pd,"__UVISION_VERSION SETA 538" -Wa,armasm,--pd,"STM32F10X_MD SETA 1"-o ./objects/intr.o)
+F (..\task.c)(0x68761CAD)(-xc -std=c99 --target=arm-arm-none-eabi -mcpu=cortex-m3 -c-fno-rtti -funsigned-char -fshort-enums -fshort-wchar-D__MICROLIB -gdwarf-4 -O1 -ffunction-sections -Wno-packed -Wno-missing-variable-declarations -Wno-missing-prototypes -Wno-missing-noreturn -Wno-sign-conversion -Wno-nonportable-include-path -Wno-reserved-id-macro -Wno-unused-macros -Wno-documentation-unknown-command -Wno-documentation -Wno-license-management -Wno-parentheses-equality -Wno-reserved-identifier -I ../cortex-m3/include -I E:/os_cook -I ../cortex-m3/bsp-ID:/Keil5/Keil_MDK538a/pack/Keil/STM32F1xx_DFP/2.4.0/Device/Include-D__UVISION_VERSION="538" -DSTM32F10X_MD-o ./objects/task.o -MD)
+I (E:\os_cook\task.h)(0x68760BB2)
+I (E:\os_cook\type.h)(0x68760845)
+I (E:\os_cook\config.h)(0x68761893)
+I (E:\os_cook\mem.h)(0x68760593)
+I (E:\os_cook\cortex-m3\include\cm3.h)(0x6876096D)
+I (D:\Keil5\Keil_MDK538a\ARM\ARMCLANG\include\arm_acle.h)(0x63884908)
+I (D:\Keil5\Keil_MDK538a\ARM\ARMCLANG\include\stdint.h)(0x63884908)
+I (D:\Keil5\Keil_MDK538a\ARM\ARMCLANG\include\stdio.h)(0x63884908)
+F (..\mem.c)(0x68760581)(-xc -std=c99 --target=arm-arm-none-eabi -mcpu=cortex-m3 -c-fno-rtti -funsigned-char -fshort-enums -fshort-wchar-D__MICROLIB -gdwarf-4 -O1 -ffunction-sections -Wno-packed -Wno-missing-variable-declarations -Wno-missing-prototypes -Wno-missing-noreturn -Wno-sign-conversion -Wno-nonportable-include-path -Wno-reserved-id-macro -Wno-unused-macros -Wno-documentation-unknown-command -Wno-documentation -Wno-license-management -Wno-parentheses-equality -Wno-reserved-identifier -I ../cortex-m3/include -I E:/os_cook -I ../cortex-m3/bsp-ID:/Keil5/Keil_MDK538a/pack/Keil/STM32F1xx_DFP/2.4.0/Device/Include-D__UVISION_VERSION="538" -DSTM32F10X_MD-o ./objects/mem.o -MD)
+I (E:\os_cook\mem.h)(0x68760593)
+I (E:\os_cook\type.h)(0x68760845)
+I (E:\os_cook\config.h)(0x68761893)
+I (E:\os_cook\task.h)(0x68760BB2)
+I (E:\os_cook\cortex-m3\include\cm3.h)(0x6876096D)
+I (D:\Keil5\Keil_MDK538a\ARM\ARMCLANG\include\arm_acle.h)(0x63884908)
+I (D:\Keil5\Keil_MDK538a\ARM\ARMCLANG\include\stdint.h)(0x63884908)
+I (D:\Keil5\Keil_MDK538a\ARM\ARMCLANG\include\stdio.h)(0x63884908)
+F (.\main.c)(0x68763BE2)(-xc -std=c99 --target=arm-arm-none-eabi -mcpu=cortex-m3 -c-fno-rtti -funsigned-char -fshort-enums -fshort-wchar-D__MICROLIB -gdwarf-4 -O1 -ffunction-sections -Wno-packed -Wno-missing-variable-declarations -Wno-missing-prototypes -Wno-missing-noreturn -Wno-sign-conversion -Wno-nonportable-include-path -Wno-reserved-id-macro -Wno-unused-macros -Wno-documentation-unknown-command -Wno-documentation -Wno-license-management -Wno-parentheses-equality -Wno-reserved-identifier -I ../cortex-m3/include -I E:/os_cook -I ../cortex-m3/bsp-ID:/Keil5/Keil_MDK538a/pack/Keil/STM32F1xx_DFP/2.4.0/Device/Include-D__UVISION_VERSION="538" -DSTM32F10X_MD-o ./objects/main.o -MD)
+I (..\cortex-m3\bsp\stm32f10_registers.h)(0x68760759)
+I (E:\os_cook\task.h)(0x68760BB2)
+I (E:\os_cook\type.h)(0x68760845)
+I (E:\os_cook\config.h)(0x68761893)
+I (E:\os_cook\mem.h)(0x68760593)
+I (E:\os_cook\cortex-m3\include\cm3.h)(0x6876096D)
+I (D:\Keil5\Keil_MDK538a\ARM\ARMCLANG\include\arm_acle.h)(0x63884908)
+I (D:\Keil5\Keil_MDK538a\ARM\ARMCLANG\include\stdint.h)(0x63884908)
+I (D:\Keil5\Keil_MDK538a\ARM\ARMCLANG\include\stdio.h)(0x63884908)
