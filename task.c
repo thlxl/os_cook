@@ -167,7 +167,7 @@ static void os_initiNewTask( TaskFunction_t task_entry,                     /*�
     task_tcb->next_event = NULL;
     task_tcb->last_event = NULL;
 
-    //listSET_LIST_ITEM_VALUE( &( task_tcb->xEventListItem ), ( TickType_t ) configMAX_PRIORITIES - ( TickType_t ) uxPriority ); 
+    //listSET_LIST_ITEM_VALUE( &( task_tcb->xEventListItem ), ( TickType_t ) configMAX_PRIORITIES - ( TickType_t ) task_prior ); 
 
     /*初始化优先级*/
     if( task_prior >= (u32_t) configMAX_PRIORITIES )
@@ -175,7 +175,7 @@ static void os_initiNewTask( TaskFunction_t task_entry,                     /*�
         task_prior = (u32_t) configMAX_PRIORITIES - (u32_t)1U;
     }
 
-    task_tcb->uxPriority = task_prior;
+    task_tcb->task_prior = task_prior;
 
     #if ( configUSE_MUTEXES == 1 )
 	{
@@ -205,27 +205,27 @@ void os_addTaskToReadyList(tcb_t *task_tcb)
     }
 
     /*检查任务优先级是否在合法范围内*/
-    if (task_tcb->uxPriority >= (u32_t)configMAX_PRIORITIES || task_tcb->uxPriority < 0) {
+    if (task_tcb->task_prior >= (u32_t)configMAX_PRIORITIES || task_tcb->task_prior < 0) {
         //printf("Error: Task priority out of range.\n");
         return;
     }
 
     /*设置任务就绪位图*/
-    RECORD_READY_PRIORITY(task_tcb->uxPriority, os_priorityBitmap);
+    RECORD_READY_PRIORITY(task_tcb->task_prior, os_priorityBitmap);
 
     // 找到该优先级下的就绪链表头
-    task_tcb->taskListHead = &os_readyTasksLists[task_tcb->uxPriority];
+    task_tcb->taskListHead = &os_readyTasksLists[task_tcb->task_prior];
 
-    if (os_readyTasksLists[task_tcb->uxPriority] == NULL) {
+    if (os_readyTasksLists[task_tcb->task_prior] == NULL) {
         // 空链表，直接插入
-        os_readyTasksLists[task_tcb->uxPriority] = task_tcb;
+        os_readyTasksLists[task_tcb->task_prior] = task_tcb;
         task_tcb->next = NULL;
         task_tcb->last = NULL;
         return;
     }
 
     // 遍历到链表末尾
-    temp = os_readyTasksLists[task_tcb->uxPriority];
+    temp = os_readyTasksLists[task_tcb->task_prior];
     while (temp->next != NULL) {
         temp = temp->next;
     }
@@ -380,7 +380,7 @@ static void os_addNewTaskToReadyList(tcb_t *task_tcb)
         {
             if(os_schedulerRunning == FALSE)
             {
-                if(os_currentTCB->uxPriority <= task_tcb->uxPriority)
+                if(os_currentTCB->task_prior <= task_tcb->task_prior)
                 {
                     os_currentTCB = task_tcb;
                 }
@@ -396,7 +396,7 @@ static void os_addNewTaskToReadyList(tcb_t *task_tcb)
 
     if(os_schedulerRunning != FALSE)
     {
-        if(os_currentTCB->uxPriority < task_tcb->uxPriority)
+        if(os_currentTCB->task_prior < task_tcb->task_prior)
         {
             TRIGGER()
         }
@@ -502,7 +502,7 @@ u32_t os_taskIncrementTick(void)
                     os_addTaskToReadyList(TCB);
 
                     /*检查是否需要切换任务*/
-                    if(TCB->uxPriority >= os_currentTCB->uxPriority)
+                    if(TCB->task_prior >= os_currentTCB->task_prior)
                     {
                         SwitchRequired = TRUE;
                     }
@@ -578,7 +578,7 @@ u32_t os_resumeAllTask( void )
 					os_addTaskToReadyList(TCB);
 
 					/* 如果被移动的任务的优先级高于当前任务，则执行上下文切换。 */
-					if( TCB->uxPriority >= os_currentTCB->uxPriority )
+					if( TCB->task_prior >= os_currentTCB->task_prior )
 					{
 						os_yieldPending = TRUE;
 					}
@@ -637,9 +637,9 @@ static void os_addCurrentTaskToDelayedList(clock_t ticksToWait, const u32_t CanB
 
     /*将任务从就序列表中移除*/
     os_taskListRemove(os_currentTCB, eTASK);
-    if(os_readyTasksLists[os_currentTCB->uxPriority] == (u32_t)0)
+    if(os_readyTasksLists[os_currentTCB->task_prior] == (u32_t)0)
     {
-        CLEAR_READY_PRIORITY(os_currentTCB->uxPriority, os_priorityBitmap);
+        CLEAR_READY_PRIORITY(os_currentTCB->task_prior, os_priorityBitmap);
     }
 
     if( (ticksToWait == 0xFFFFFFFF) && ( CanBlockIndefinitely != FALSE ) )
@@ -696,4 +696,37 @@ void os_delay(const clock_t ticksToDelay)
     }
 }
 
+u32_t os_taskRemoveFromEventList(const tcb_t * const eventList)
+{
+    tcb_t *unblockedTCB;
+    u32_t ret;
 
+	unblockedTCB = ( tcb_t * ) eventList;
+    /*从事件列表中移除任务*/
+    os_taskListRemove(unblockedTCB, eEVENT);
+
+	if( os_schedulerSuspended == (u32_t)FALSE)
+	{
+        /*如果调度器没有挂起，就将任务从挂起列表中移除，并添加到就绪列表中*/
+		os_taskListRemove(unblockedTCB, eTASK);
+		os_addTaskToReadyList(unblockedTCB);
+	}
+	else
+	{
+		/* 如果调度器挂起，就将任务添加到待就绪列表中 */
+		os_listInsertEnd(unblockedTCB, &os_pendingReadyList);
+	}
+
+	if(unblockedTCB->uxPriority > os_currentTCB->uxPriority)
+	{
+		/* 如果被解除阻塞的任务的优先级高于当前任务，则执行上下文切换。 */
+		ret = TRUE;
+		os_yieldPending = TRUE;
+	}
+	else
+	{
+		ret = FALSE;
+	}
+
+	return ret;
+}

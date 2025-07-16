@@ -17,7 +17,7 @@ typedef struct tsk
     stack_t                 *stack_start;                       /*任务栈起始地址*/
     char                    task_name[configMAX_TASK_NAME_LEN];                     /*任务名称，字符串形式*/
     clock_t                 ticksToDelay;                         /*延时计数器*/
-    u32_t             uxPriority;                          /*任务优先级*/
+    u32_t             task_prior;                          /*任务优先级*/
     struct tsk    **taskListHead;                  /*任务链表头*/
     struct tsk    **eventListHead;                  /*事件链表头*/
     #if ( configUSE_MUTEXES == 1 )
@@ -50,5 +50,7 @@ void os_delay(const clock_t ticksToDelay);
 void os_suspendAllTask( void );
 
 u32_t os_resumeAllTask( void );
+
+u32_t os_taskRemoveFromEventList(const tcb_t * const eventList);
 
 #endif
