@@ -32,6 +32,12 @@ typedef enum which_list
     eEVENT              /*事件链表*/
 } which_list_t;
 
+typedef struct TIME_OUT
+{
+	u32_t overflowCount;
+	clock_t timeOnEntering;
+} TimeOut_t;
+
 /*判断链表是否为空*/
 #define LIST_IS_EMPTY(tskList)    ((tskList) == (NULL) ? TRUE : FALSE)
 
@@ -52,5 +58,13 @@ void os_suspendAllTask( void );
 u32_t os_resumeAllTask( void );
 
 u32_t os_taskRemoveFromEventList(const tcb_t * const eventList);
+
+void os_taskSetTimeOutState(TimeOut_t * const TimeOut);
+
+u32_t os_taskCheckForTimeOut(TimeOut_t * const TimeOut, clock_t * const TicksToWait);
+
+void os_setTrigger(void);
+
+void os_taskPlaceOnEventList(tcb_t *eventList, const clock_t TicksToWait);
 
 #endif

@@ -429,6 +429,11 @@
               <FileType>1</FileType>
               <FilePath>..\mem.c</FilePath>
             </File>
+            <File>
+              <FileName>mqueue.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\mqueue.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -865,6 +870,11 @@
               <FileName>mem.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\mem.c</FilePath>
+            </File>
+            <File>
+              <FileName>mqueue.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\mqueue.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -25,6 +25,7 @@ static volatile clock_t os_tickCount 	= (clock_t) 0U;
 /*下一任务解除阻塞时间*/
 static volatile clock_t os_nextTaskUnblockTime	= (clock_t) 0U;
 
+/*计时器溢出次数*/
 static volatile u32_t os_numOfOverflows = (u32_t)0;
 
 /*记录调度器挂起的这段时间经历的系统tick数*/
@@ -602,10 +603,6 @@ u32_t os_resumeAllTask( void )
 							{
 								os_yieldPending = TRUE;
 							}
-							else
-							{
-								//mtCOVERAGE_TEST_MARKER();
-							}
 							--uxPendedCounts;
 						} while( uxPendedCounts > 0U );
 
@@ -650,7 +647,7 @@ static void os_addCurrentTaskToDelayedList(clock_t ticksToWait, const u32_t CanB
     else
     {
 
-        /*计算任务延时到期时，系统时基计数器xTickCount的值是多少*/
+        /*计算任务延时到期时，系统时基计数器os_tickCount的值是多少*/
         timeToWake = constTickCount + ticksToWait;
 
         /*将延时到期的值设置为节点的排序值*/
@@ -665,7 +662,7 @@ static void os_addCurrentTaskToDelayedList(clock_t ticksToWait, const u32_t CanB
         {
             os_listInsertByDelay(os_currentTCB,os_ptrDelayTaskList);
 
-            /*更新下一个任务解锁时刻变量xNextTaskUnbloTime的值*/
+            /*更新下一个任务解锁时刻变量os_nextTaskUnblockTime的值*/
             if(timeToWake < os_nextTaskUnblockTime)
             {
                 os_nextTaskUnblockTime = timeToWake;
@@ -717,7 +714,7 @@ u32_t os_taskRemoveFromEventList(const tcb_t * const eventList)
 		os_listInsertEnd(unblockedTCB, &os_pendingReadyList);
 	}
 
-	if(unblockedTCB->uxPriority > os_currentTCB->uxPriority)
+	if(unblockedTCB->task_prior > os_currentTCB->task_prior)
 	{
 		/* 如果被解除阻塞的任务的优先级高于当前任务，则执行上下文切换。 */
 		ret = TRUE;
@@ -730,3 +727,84 @@ u32_t os_taskRemoveFromEventList(const tcb_t * const eventList)
 
 	return ret;
 }
+
+void os_taskSetTimeOutState(TimeOut_t * const TimeOut)
+{
+	TimeOut->overflowCount = os_numOfOverflows;
+	TimeOut->timeOnEntering = os_tickCount;
+}
+
+u32_t os_taskCheckForTimeOut(TimeOut_t * const TimeOut, clock_t * const TicksToWait)
+{
+    u32_t ret;
+
+	ENTER_CRITICAL();
+	{
+		const u32_t ConstTickCount = os_tickCount;
+
+		#if( INCLUDE_xTaskAbortDelay == 1 )
+			if( os_currentTCB->ucDelayAborted != FALSE )
+			{
+				os_currentTCB->ucDelayAborted = FALSE;
+				ret = TRUE;
+			}
+			else
+		#endif
+
+		#if ( INCLUDE_vTaskSuspend == 1 )
+			if( *TicksToWait == 0xffffffffUL )
+			{
+				ret = FALSE;
+			}
+			else
+		#endif
+
+		if((os_numOfOverflows != TimeOut->overflowCount ) && ( ConstTickCount >= TimeOut->timeOnEntering ) ) 
+		{
+			/*当计数器溢出，且计数值大于timeOnEntering则肯定时间已到*/
+			ret = TRUE;
+		}
+		else if(((clock_t )(ConstTickCount - TimeOut->timeOnEntering ) ) < *TicksToWait ) 
+		{
+			/* 此处可以不考虑溢出的情况，因为无符号加减中溢出会自动处理 */
+
+            /* 更新超时状态 */
+			*TicksToWait -= ( ConstTickCount - TimeOut->timeOnEntering );
+			os_taskSetTimeOutState(TimeOut);
+            /*未超时*/
+			ret = FALSE;
+		}
+		else
+		{
+            /*超时*/
+			ret = TRUE;
+		}
+	}
+	EXIT_CRITICAL();
+
+	return ret;
+}
+
+void os_setTrigger(void)
+{
+    /* 处理任务错过了调度的情况 */
+    os_yieldPending = TRUE;
+}
+
+
+/*
+* 把等待事件任务放到事件列表
+*/
+void os_taskPlaceOnEventList(tcb_t * eventList, const clock_t TicksToWait)
+{
+
+	/* 必须在禁用中断或暂停调度程序并锁定正在访问的队列的情况下调用此函数。 */
+
+    /* 将当前任务添加到对应的事件列表 */
+	os_listInsertByDelay(os_currentTCB, &eventList);
+
+    /*把当前任务添加到延时列表*/
+	os_addCurrentTaskToDelayedList(TicksToWait, TRUE);
+}
+
+
