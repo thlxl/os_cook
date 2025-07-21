@@ -20,10 +20,8 @@ typedef struct tsk
     u32_t             task_prior;                          /*任务优先级*/
     struct tsk    **taskListHead;                  /*任务链表头*/
     struct tsk    **eventListHead;                  /*事件链表头*/
-    #if ( configUSE_MUTEXES == 1 )
-		u32_t		uxBasePriority;		/*< 优先级继承机制使用 */
-		u32_t		uxMutexesHeld;
-	#endif
+    u32_t             task_state;                          /*任务状态*/
+    u32_t             mutexHeld;                           /*互斥量持有个数*/
 }tcb_t;
 
 typedef enum which_list
@@ -66,5 +64,11 @@ u32_t os_taskCheckForTimeOut(TimeOut_t * const TimeOut, clock_t * const TicksToW
 void os_setTrigger(void);
 
 void os_taskPlaceOnEventList(tcb_t *eventList, const clock_t TicksToWait);
+
+TaskHandle_t os_getCurrentTaskHandle( void );
+
+void os_taskPriorInherit(TaskHandle_t const TCB);
+
+u32_t os_taskPriorDisinherit(TaskHandle_t const TCB, const u32_t mutexPrior);
 
 #endif

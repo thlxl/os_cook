@@ -1,5 +1,6 @@
 #include "string.h"
 #include "mqueue.h"
+#include "mutex.h"
 
 
 #define LockQueue( mQueue )								\
@@ -201,7 +202,7 @@ u32_t mQueueSend(mQueueHandle_t mQueue, const void * const ItemToQueue, clock_t 
 *TicksToWait为0则不等待直接返回FALSE表示发送失败
 *TicksToWait > 0时表示等待时间，如果等待时间内完成读取则返回TRUE否则返回FALSE
 */
-u32_t xQueueGenericReceive(mQueueHandle_t mQueue, void * const Buffer, clock_t TicksToWait, const u32_t JustPeeking)
+u32_t mQueueReceive(mQueueHandle_t mQueue, void * const Buffer, clock_t TicksToWait, const u32_t JustPeeking)
 {
 	u32_t EntryTimeSet = FALSE;
 	TimeOut_t TimeOut;
@@ -510,6 +511,162 @@ static void UnlockQueue(Queue_t * const mQueue )
 }
 
 
+
+/*
+*创建一个互斥量
+*/
+mutexHandle_t mutexCreat(void)
+{
+	mutex_t* mutex;
+
+	mutex = (mutex_t*)os_malloc(sizeof(mutex_t));
+	if(mutex == NULL){
+		return mutex;
+	}
+
+	mutex->owner = NULL;
+	mutex->taken_list = NULL;
+	mutex->priority = 0;
+	mutex->hold = 0;
+
+	return mutex;
+}
+
+
+/*
+*删除互斥量（注：删除时，要手动保证没有任务线程阻塞到这个互斥量上）
+*/
+void mutexDelete(mutexHandle_t mutex)
+{
+	mutex_t* pmutex = (mutex_t*)mutex;
+
+	os_free(pmutex);
+}
+
+
+/*
+* 互斥量上锁
+*/
+u32_t mutexLock(mutexHandle_t mutex, clock_t TicksToWait)
+{
+	u32_t EntryTimeSet = FALSE;
+	TimeOut_t TimeOut;
+	mutex_t* const pmutex = (mutex_t*) mutex;
+
+	tcb_t* const currentTaskTcb = (tcb_t*)os_getCurrentTaskHandle();
+
+	if(pmutex->owner == currentTaskTcb)
+	{
+		pmutex->hold++;
+		return PASS;
+	}
+	else
+	{
+		for(;;)
+		{
+			ENTER_CRITICAL();
+			{
+				/*如果当前互斥量没上锁*/
+				if(pmutex->hold == 0)
+				{
+					/*记录互斥量持有者的信息*/
+					pmutex->hold = 1;
+					pmutex->owner = currentTaskTcb;
+					pmutex->priority = currentTaskTcb->task_prior;
+					currentTaskTcb->mutexHeld++;
+					return PASS;
+				}
+				else if(TicksToWait == 0)
+				{
+
+					EXIT_CRITICAL();
+					return FALSE;
+				}
+				else if(EntryTimeSet == FALSE)
+				{
+					os_taskSetTimeOutState(&TimeOut);
+					EntryTimeSet = TRUE;
+				}
+			}
+			EXIT_CRITICAL();
+
+			os_suspendAllTask();
+			if(os_taskCheckForTimeOut(&TimeOut, &TicksToWait) == FALSE)
+			{
+			
+				if(pmutex->hold != 0)
+				{
+					ENTER_CRITICAL();
+
+					os_taskPriorInherit(pmutex->owner);
+					os_taskPlaceOnEventList(pmutex->taken_list, TicksToWait);
+
+					EXIT_CRITICAL();
+					if(os_resumeAllTask() == FALSE)
+					{
+						TRIGGER();
+					}
+				}
+				else
+				{
+					os_resumeAllTask();
+				}
+			}
+			else
+			{
+				os_resumeAllTask();
+				return FALSE;
+			}
+		}
+	}
+}
+
+
+/*
+* 互斥量解锁
+*/
+u32_t mutexUnlock(mutexHandle_t mutex)
+{
+	u32_t ret;
+	mutex_t* const pmutex = (mutex_t*) mutex;
+
+	tcb_t* const currentTaskTcb = (tcb_t*)os_getCurrentTaskHandle();
+
+	if(pmutex->owner == currentTaskTcb)
+	{
+		pmutex->hold--;
+
+		if(pmutex->hold == 0)
+		{
+			ENTER_CRITICAL();
+			{
+				os_taskPriorDisinherit(pmutex->owner, pmutex->priority);
+				pmutex->owner = NULL;
+				pmutex->priority = 0;
+				pmutex->hold = 0;
+				currentTaskTcb->mutexHeld--;
+
+				if(pmutex->taken_list != NULL)
+				{
+					if(os_taskRemoveFromEventList(pmutex->taken_list) != FALSE)
+					{
+						TRIGGER();
+					}
+				}
+
+			}
+			EXIT_CRITICAL();
+		}
+
+		ret = TRUE;
+	}
+	else
+	{
+		ret = FALSE;
+	}
+
+	return ret;
+}
 
 // #if( ( configUSE_COUNTING_SEMAPHORES == 1 ) && ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) )
 

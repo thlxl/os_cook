@@ -35,4 +35,10 @@ typedef messageQueue_t Queue_t;
 
 typedef void * mQueueHandle_t;
 
+void mQueueDelete(mQueueHandle_t mQueue);
+u32_t mQueueReceive(mQueueHandle_t mQueue, void * const Buffer, clock_t TicksToWait, const u32_t JustPeeking);
+u32_t mQueueSend(mQueueHandle_t mQueue, const void * const ItemToQueue, clock_t TicksToWait, const u32_t CopyPosition );
+mQueueHandle_t mQueueCreate( const u32_t mQueueLength, const u32_t ItemSize);
+u32_t mQueueReset( mQueueHandle_t mQueue, u32_t isNewQueue);
+
 #endif/* _MQUEUE_H */

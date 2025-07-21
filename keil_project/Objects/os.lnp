@@ -7,7 +7,7 @@
 ".\objects\intr.o"
 ".\objects\task.o"
 ".\objects\mem.o"
-".\objects\mqueue.o"
+".\objects\ipc.o"
 ".\objects\main.o"
 --library_type=microlib --strict --scatter ".\Objects\os.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols

@@ -168,7 +168,11 @@ static void os_initiNewTask( TaskFunction_t task_entry,                     /*�
     task_tcb->next_event = NULL;
     task_tcb->last_event = NULL;
 
-    //listSET_LIST_ITEM_VALUE( &( task_tcb->xEventListItem ), ( TickType_t ) configMAX_PRIORITIES - ( TickType_t ) task_prior ); 
+    task_tcb->taskListHead = NULL;
+    task_tcb->eventListHead = NULL;
+
+    task_tcb->mutexHeld = 0;
+
 
     /*初始化优先级*/
     if( task_prior >= (u32_t) configMAX_PRIORITIES )
@@ -177,13 +181,6 @@ static void os_initiNewTask( TaskFunction_t task_entry,                     /*�
     }
 
     task_tcb->task_prior = task_prior;
-
-    #if ( configUSE_MUTEXES == 1 )
-	{
-		task_tcb->uxBasePriority = task_prior;
-		task_tcb->uxMutexesHeld = 0;
-	}
-	#endif /* configUSE_MUTEXES */
 
     /*初始化任务栈*/
     task_tcb->task_sp = os_initTaskStack(TopOfStack,task_entry,task_argv);
@@ -807,4 +804,105 @@ void os_taskPlaceOnEventList(tcb_t * eventList, const clock_t TicksToWait)
 	os_addCurrentTaskToDelayedList(TicksToWait, TRUE);
 }
 
+
+
+/*
+* 获取当前任务句柄
+*/
+TaskHandle_t os_getCurrentTaskHandle( void )
+{
+    TaskHandle_t ret;
+    ret = os_currentTCB;
+
+    return ret;
+}
+
+static u32_t os_findTaskFromList(const tcb_t * const ListHead, const tcb_t * const TCB)
+{
+    const tcb_t *Iterator = ListHead;
+
+    while(Iterator != NULL)
+    {
+        if(Iterator == TCB)
+        {
+            return TRUE;
+        }
+
+        Iterator = Iterator->next;
+    }
+
+    return FALSE;
+}
+
+
+
+/*
+* 优先级继承
+* 如果持有互斥量的任务优先级低于尝试获取互斥量的任务优先级，则互斥量持有者的优先级将暂时继承尝试获取互斥量的任务的优先级。
+* 如果互斥量的持有者正在就绪列表中，则将其从就绪列表中移除，并将其添加到新列表中。否则直接继承优先级。
+*/
+void os_taskPriorInherit(TaskHandle_t const TCB)
+{
+    tcb_t* const mutexTCB = (tcb_t*)TCB;
+    /*如果互斥锁的持有者的优先级低于尝试获取互斥锁的任务的优先级，则它将暂时继承尝试获取互斥锁的任务的优先级。*/
+    if(mutexTCB->task_prior < os_currentTCB->task_prior)
+    {
+        /* 如果正在修改的任务处于就绪状态，则需要将其移动到新列表中。 */
+        if(os_findTaskFromList(os_readyTasksLists[mutexTCB->task_prior],  mutexTCB) != FALSE )
+        {
+            os_taskListRemove(mutexTCB, eTASK);
+
+            if(os_readyTasksLists[mutexTCB->task_prior] == NULL)
+            {
+                CLEAR_READY_PRIORITY(mutexTCB->task_prior, os_priorityBitmap);
+            }
+
+            /* 在移动到新列表之前继承优先级。 */
+            mutexTCB->task_prior = os_currentTCB->task_prior;
+            os_addTaskToReadyList(mutexTCB);
+        }
+        else
+        {
+            /* 如果不处在就绪列表中就仅继承优先级*/
+            mutexTCB->task_prior = os_currentTCB->task_prior;
+        }
+    }
+}
+
+
+/*
+* 互斥量解除优先级继承
+* 如果互斥量的持有者继承了另一个任务的优先级，则互斥量的持有者将恢复其原始优先级。
+* 如果互斥量的持有者不再持有其他互斥量，则将其添加到就绪列表中。
+*/
+u32_t os_taskPriorDisinherit(TaskHandle_t const TCB, const u32_t mutexPrior)
+{
+    u32_t ret = FALSE;
+    tcb_t* const mutexTCB = (tcb_t*)TCB;
+
+    if(mutexTCB != NULL)
+    {
+        /* 互斥锁的持有者是否继承了另一个任务的优先级？*/
+        if(mutexTCB->task_prior != mutexPrior)
+        {
+            /* 仅当没有其他互斥锁时才 disinherit 。 */
+            if(mutexTCB->mutexHeld == 0)
+            {
+                os_taskListRemove(mutexTCB, eTASK);
+
+                if(os_readyTasksLists[mutexTCB->task_prior] == NULL)
+                {
+                    CLEAR_READY_PRIORITY(mutexTCB->task_prior, os_priorityBitmap);
+                }
+
+                /*在将任务添加到新的就绪列表之前，取消继承优先级。*/
+                mutexTCB->task_prior = mutexPrior;
+                os_addTaskToReadyList(mutexTCB);
+
+                ret = TRUE;
+            }
+        }
+    }
+    return ret;
+}
 

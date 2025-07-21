@@ -5,6 +5,7 @@
         "armcm3.h": "c",
         "config.h": "c",
         "task.h": "c",
-        "mem.h": "c"
+        "mem.h": "c",
+        "mqueue.h": "c"
     }
 }

@@ -430,9 +430,9 @@
               <FilePath>..\mem.c</FilePath>
             </File>
             <File>
-              <FileName>mqueue.c</FileName>
+              <FileName>ipc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\mqueue.c</FilePath>
+              <FilePath>..\ipc.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -872,9 +872,9 @@
               <FilePath>..\mem.c</FilePath>
             </File>
             <File>
-              <FileName>mqueue.c</FileName>
+              <FileName>ipc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\mqueue.c</FilePath>
+              <FilePath>..\ipc.c</FilePath>
             </File>
           </Files>
         </Group>
