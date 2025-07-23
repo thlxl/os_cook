@@ -1,5 +1,5 @@
-#ifndef _MQUEUE_H
-#define _MQUEUE_H
+#ifndef MQUEUE_H
+#define MQUEUE_H
 
 #include "type.h"
 #include "task.h"
