@@ -1,5 +1,5 @@
-#ifndef __MUTEX_H__
-#define __MUTEX_H__
+#ifndef MUTEX_H__
+#define MUTEX_H__
 
 #include "type.h"
 #include "task.h"
@@ -25,4 +25,4 @@ void mutexDelete(mutexHandle_t mutex);
 /*互斥量尝试上锁，如果互斥量被其他任务持有，则立即返回，不会阻塞当前任务*/
 #define mutexTryLock(mutex) mutexLock(mutex, 0)
 
-#endif//__MUTEX_H__
+#endif//MUTEX_H__
