@@ -83,6 +83,11 @@ static void os_initiNewTask( TaskFunction_t task_entry,                     /*�
 static void os_addNewTaskToReadyList(tcb_t *task_tcb);
 
 
+
+
+/*
+* 创建任务
+*/
 u32_t os_create_task(TaskFunction_t task_entry,                  /*任务入口*/
 							const char * const task_name,              /*任务名称*/
 							const size_t stack_size,            /*任务栈大小*/
@@ -132,6 +137,11 @@ u32_t os_create_task(TaskFunction_t task_entry,                  /*任务入口*
     return ret;
 }
 
+
+
+/*
+* 初始化任务
+*/
 static void os_initiNewTask( TaskFunction_t task_entry,                     /*任务入口*/
                                   const char * const task_name,                     /*任务名称*/
                                   const size_t stack_size,                   /*任务栈大小*/
@@ -192,6 +202,12 @@ static void os_initiNewTask( TaskFunction_t task_entry,                     /*�
     }
 }
 
+
+
+
+/*
+* 将任务插入到就绪链表
+*/
 void os_addTaskToReadyList(tcb_t *task_tcb)
 {
     tcb_t *temp;
@@ -235,7 +251,10 @@ void os_addTaskToReadyList(tcb_t *task_tcb)
 }
 
 
-/*将节点从链表删除*/
+
+/*
+*将节点从链表删除
+*/
 void os_taskListRemove(tcb_t* const taskNodeToRemove, which_list_t list)
 {
     if(taskNodeToRemove == NULL)
@@ -283,6 +302,10 @@ void os_taskListRemove(tcb_t* const taskNodeToRemove, which_list_t list)
 }
 
 
+
+/*
+* 将任务插入到任务链表末尾
+*/
 void os_listInsertEnd(tcb_t *taskNodeToInsert, tcb_t **listHead)
 {
     tcb_t *temp;
@@ -310,6 +333,11 @@ void os_listInsertEnd(tcb_t *taskNodeToInsert, tcb_t **listHead)
     taskNodeToInsert->next = NULL;
 }
 
+
+
+/*
+* 将任务插入到延时列表中
+*/
 void os_listInsertByDelay(tcb_t *taskNodeToInsert, tcb_t **listHead)
 {
     tcb_t *temp, *prev = NULL;
@@ -355,6 +383,11 @@ void os_listInsertByDelay(tcb_t *taskNodeToInsert, tcb_t **listHead)
     }
 }
 
+
+
+/*
+* 将新任务任务添加到就绪列表
+*/
 static void os_addNewTaskToReadyList(tcb_t *task_tcb)
 {
     /*进入临界段*/
@@ -402,6 +435,12 @@ static void os_addNewTaskToReadyList(tcb_t *task_tcb)
 }
 
 
+
+
+
+/*
+* 重置下个解除阻塞任务的时间
+*/
 static void os_resetNextTaskUnblockTime(void)
 {
     if(LIST_IS_EMPTY(*os_ptrDelayTaskList) != FALSE)
@@ -417,6 +456,11 @@ static void os_resetNextTaskUnblockTime(void)
     }
 }
 
+
+
+/*
+* 空闲任务，什么都不做
+*/
 static void IdleTask(void* param)
 {
     /*空闲任务，什么都不做*/
@@ -451,6 +495,10 @@ void os_taskStartScheduler(void)
 }
 
 
+
+/*
+*更新时基计数器xTickCount，检查是否有任务延时到期，如果有则将延时到期任务从延时列表中移除
+*/
 u32_t os_taskIncrementTick(void)
 {
     tcb_t *TCB = NULL;
@@ -528,6 +576,11 @@ u32_t os_taskIncrementTick(void)
     return SwitchRequired;
 }
 
+
+
+/*
+*切换任务
+*/
 void os_switchContext(void)
 {
     if(os_schedulerSuspended != FALSE)
@@ -548,6 +601,11 @@ void os_suspendAllTask( void )
 	++os_schedulerSuspended;
 }
 
+
+
+/*
+*恢复所有挂起的任务
+*/
 u32_t os_resumeAllTask( void )
 {
     tcb_t *TCB = NULL;
@@ -622,6 +680,11 @@ u32_t os_resumeAllTask( void )
 	return alreadyYielded;
 }
 
+
+
+/*
+*将当前任务插入到延时列表中
+*/
 static void os_addCurrentTaskToDelayedList(clock_t ticksToWait, const u32_t CanBlockIndefinitely)
 {
     clock_t timeToWake;
@@ -669,6 +732,10 @@ static void os_addCurrentTaskToDelayedList(clock_t ticksToWait, const u32_t CanB
 }
 
 
+
+/*
+* 任务延时，单位为tick
+*/
 void os_delay(const clock_t ticksToDelay)
 {
     u32_t alreadyYielded = FALSE;
@@ -690,6 +757,11 @@ void os_delay(const clock_t ticksToDelay)
     }
 }
 
+
+
+/*
+*从消息队列，信号量，互斥量等的事件列表中移除任务
+*/
 u32_t os_taskRemoveFromEventList(const tcb_t * const eventList)
 {
     tcb_t *unblockedTCB;
@@ -725,12 +797,21 @@ u32_t os_taskRemoveFromEventList(const tcb_t * const eventList)
 	return ret;
 }
 
+
+/*
+* 设置超时结构体状态
+*/
 void os_taskSetTimeOutState(TimeOut_t * const TimeOut)
 {
 	TimeOut->overflowCount = os_numOfOverflows;
 	TimeOut->timeOnEntering = os_tickCount;
 }
 
+
+
+/*
+* 检查任务是否超时
+*/
 u32_t os_taskCheckForTimeOut(TimeOut_t * const TimeOut, clock_t * const TicksToWait)
 {
     u32_t ret;
@@ -782,6 +863,11 @@ u32_t os_taskCheckForTimeOut(TimeOut_t * const TimeOut, clock_t * const TicksToW
 	return ret;
 }
 
+
+
+/*
+*设置调度触发标志
+*/
 void os_setTrigger(void)
 {
     /* 处理任务错过了调度的情况 */
@@ -817,6 +903,11 @@ TaskHandle_t os_getCurrentTaskHandle( void )
     return ret;
 }
 
+
+
+/*
+*查找一个链表中是否包含某个任务
+*/
 static u32_t os_findTaskFromList(const tcb_t * const ListHead, const tcb_t * const TCB)
 {
     const tcb_t *Iterator = ListHead;

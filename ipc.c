@@ -2,7 +2,7 @@
 #include "mqueue.h"
 #include "mutex.h"
 
-
+/*锁住队列，主要就是防止中断操作队列*/
 #define LockQueue( mQueue )								\
 	ENTER_CRITICAL();									\
 	{														\
@@ -513,6 +513,25 @@ static void UnlockQueue(Queue_t * const mQueue )
 
 
 /*
+*创建一个信号量，并初始化信号量
+*信号量底层使用的是消息队列那一套API
+*/
+mQueueHandle_t mQueueCreateSemaphore(const u32_t maxCount, const u32_t initValue)
+{
+	mQueueHandle_t mQueue;
+	mQueue = mQueueCreate(maxCount, 0);
+
+	if(mQueue != NULL)
+	{
+		/* 初始化信号量 */
+		((Queue_t*)mQueue)->uxMessagesWaiting = initValue;
+	}
+
+	return mQueue;
+}
+
+
+/*
 *创建一个互斥量
 */
 mutexHandle_t mutexCreat(void)
@@ -668,118 +687,4 @@ u32_t mutexUnlock(mutexHandle_t mutex)
 	return ret;
 }
 
-// #if( ( configUSE_COUNTING_SEMAPHORES == 1 ) && ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) )
 
-// QueueHandle_t xQueueCreateCountingSemaphore( const u32_t uxMaxCount, const u32_t uxInitialCount )
-// {
-// QueueHandle_t xHandle;
-
-// 	xHandle = xQueueGenericCreate( uxMaxCount, queueSEMAPHORE_QUEUE_ITEM_LENGTH, queueQUEUE_TYPE_COUNTING_SEMAPHORE );
-
-// 	if( xHandle != NULL )
-// 	{
-// 		( ( Queue_t * ) xHandle )->uxMessagesWaiting = uxInitialCount;
-
-// 	}
-
-// 	return xHandle;
-// }
-
-// #endif /* ( ( configUSE_COUNTING_SEMAPHORES == 1 ) && ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) ) */
-
-// #if( configUSE_MUTEXES == 1 )
-
-// 	static void prvInitialiseMutex( Queue_t *pxNewQueue )
-// 	{
-// 		if( pxNewQueue != NULL )
-// 		{
-// 			/*表示没有任务持有互斥量*/
-// 			pxNewQueue->pxMutexHolder = NULL;
-// 			pxNewQueue->uxQueueType = queueQUEUE_IS_MUTEX;
-
-// 			/* 递归互斥量调用次数 */
-// 			pxNewQueue->u.uxRecursiveCallCount = 0;
-
-// 			/* 释放互斥量 */
-// 			( void ) xQueueGenericSend( pxNewQueue, NULL, ( clock_t ) 0U, queueSEND_TO_BACK );
-// 		}
-// 	}
-
-// #endif /* configUSE_MUTEXES */
-
-// #if( ( configUSE_MUTEXES == 1 ) && ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) )
-
-// 	QueueHandle_t xQueueCreateMutex( const us8_t ucQueueType )
-// 	{
-// 	Queue_t *pxNewQueue;
-// 	const u32_t uxMutexLength = ( u32_t ) 1, uxMutexSize = ( u32_t ) 0;
-
-// 		pxNewQueue = ( Queue_t * ) xQueueGenericCreate( uxMutexLength, uxMutexSize, ucQueueType );
-// 		prvInitialiseMutex( pxNewQueue );
-
-// 		return pxNewQueue;
-// 	}
-
-// #endif /* configUSE_MUTEXES */
-
-// #if ( configUSE_RECURSIVE_MUTEXES == 1 )
-
-// 	u32_t xQueueTakeMutexRecursive( QueueHandle_t xMutex, clock_t xTicksToWait )
-// 	{
-// 	u32_t xReturn;
-// 	Queue_t * const pxMutex = ( Queue_t * ) xMutex;
-
-// 		/*如果持有互斥量的任务就是当前任务*/ 
-// 		if( pxMutex->pxMutexHolder == ( void * ) xTaskGetCurrentTaskHandle() )
-// 		{
-// 			( pxMutex->u.uxRecursiveCallCount )++;
-// 			xReturn = pdPASS;
-// 		}
-// 		else
-// 		{
-// 			xReturn = xQueueGenericReceive( pxMutex, NULL, xTicksToWait, pdFALSE );
-
-// 			/*  获取递归互斥量成功，记录递归互斥量的获取次数  */
-// 			if( xReturn != pdFAIL )
-// 			{
-// 				( pxMutex->u.uxRecursiveCallCount )++;
-// 			}
-// 		}
-
-// 		return xReturn;
-// 	}
-
-// #endif /* configUSE_RECURSIVE_MUTEXES */
-
-// #if ( configUSE_RECURSIVE_MUTEXES == 1 )
-
-// 	u32_t xQueueGiveMutexRecursive( QueueHandle_t xMutex )
-// 	{
-// 	u32_t xReturn;
-// 	Queue_t * const pxMutex = ( Queue_t * ) xMutex;
-
-// 		/* 判断任务是否持有这个递归互斥量 */
-// 		if( pxMutex->pxMutexHolder == ( void * ) xTaskGetCurrentTaskHandle() ) 
-// 		{
-// 			/*调用次数计数值减一 */
-// 			( pxMutex->u.uxRecursiveCallCount )--;
-
-// 			/* 如果计数值减到0 */
-// 			if( pxMutex->u.uxRecursiveCallCount == ( u32_t ) 0 )
-// 			{
-// 				/* 释放互斥量 */
-// 				( void ) xQueueGenericSend( pxMutex, NULL, queueMUTEX_GIVE_BLOCK_TIME, queueSEND_TO_BACK );
-// 			}
-
-// 			xReturn = pdPASS;
-// 		}
-// 		else
-// 		{
-// 			/* 说明吃任务不具备释放这个互斥量的权利 */
-// 			xReturn = pdFAIL;
-// 		}
-
-// 		return xReturn;
-// 	}
-
-// #endif /* configUSE_RECURSIVE_MUTEXES */
