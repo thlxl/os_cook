@@ -16,6 +16,9 @@ static tcb_t* os_suspendedTaskList = NULL;
 /*任务在调度器挂起的时候，本该就绪的链表*/
 static tcb_t* os_pendingReadyList = NULL;
 
+/*需要删除的任务链表*/
+static tcb_t* os_tasksWaitingTermination = NULL;
+
 /*当前任务控制块*/
 tcb_t* volatile os_currentTCB= NULL;
 
@@ -400,12 +403,6 @@ static void os_addNewTaskToReadyList(tcb_t *task_tcb)
         if(os_currentTCB == NULL)
         {
             os_currentTCB = task_tcb;
-
-            // /*如果是第一次创建任务，则需要初始化任务相关的列表*/
-            // if(CurrentNumberOfTasks == (u32_t) 1)
-            // {
-            //     prvInitialiseTaskLists();
-            // }
         }
         else     /*如果os_currentTCB不为空，则将指向最高优先级任务的TCB*/
         {
@@ -437,7 +434,6 @@ static void os_addNewTaskToReadyList(tcb_t *task_tcb)
 
 
 
-
 /*
 * 重置下个解除阻塞任务的时间
 */
@@ -459,14 +455,26 @@ static void os_resetNextTaskUnblockTime(void)
 
 
 /*
-* 空闲任务，什么都不做
+* 空闲任务，执行一些清除任务
 */
 static void IdleTask(void* param)
 {
-    /*空闲任务，什么都不做*/
+    tcb_t* TCB;
     for(;;)
     {
+        while(os_tasksWaitingTermination != NULL)
+        {
+            TCB = os_tasksWaitingTermination;
 
+            /*把任务从待删除列表删除*/
+            os_taskListRemove(TCB, eTASK);
+
+            os_free(TCB->stack_start);
+            os_free(TCB);
+            --os_currentNumberOfTasks;
+            /*删除的任务可能是下一个阻塞时间到需要唤醒的任务，所以要重置下一个阻塞时间*/
+            os_resetNextTaskUnblockTime();
+        }
     }
 }
 
@@ -995,5 +1003,75 @@ u32_t os_taskPriorDisinherit(TaskHandle_t const TCB, const u32_t mutexPrior)
         }
     }
     return ret;
+}
+
+
+
+/*
+* 清除TCB
+*/
+static void os_DeleteTCB(tcb_t * TCB)
+{
+    os_free(TCB->stack_start);
+    os_free(TCB);
+}
+
+
+/*
+* 删除任务
+*/
+void os_taskDelete(TaskHandle_t TaskToDelete )
+{
+    tcb_t * TCB;
+
+    ENTER_CRITICAL();
+    {
+        TCB = (tcb_t*)TaskToDelete;
+
+        /*从就绪链表或者阻塞链表中删除任务*/
+        os_taskListRemove(TCB, eTASK);
+        if(os_readyTasksLists[TCB->task_prior] == (u32_t)0)
+        {
+            CLEAR_READY_PRIORITY(TCB->task_prior, os_priorityBitmap);
+        }
+
+        /* 任务是否在一个事件链表中 ？*/
+        if(*(TCB->eventListHead) == NULL)
+        {
+            os_taskListRemove(TCB, eEVENT);
+        }
+
+
+        if( TCB == os_currentTCB )
+        {
+            /*
+            *如果一个任务删除的是他自己，就不能立即删除。
+            *把他插入待删除链表，等空闲任务来进行删除。
+            */
+            os_listInsertEnd(TCB, &os_tasksWaitingTermination);
+        }
+        else
+        {
+            --os_currentNumberOfTasks;
+            /*删除的任务可能是下一个阻塞时间到需要唤醒的任务，所以要重置下一个阻塞时间*/
+            os_resetNextTaskUnblockTime();
+        }
+    }
+    EXIT_CRITICAL();
+
+    /*如果当前任务就是被删除的任务，就清除内存空间*/
+    if( TCB != os_currentTCB )
+    {
+        os_DeleteTCB(TCB);
+    }
+
+    /*强制执行调度器，切换任务*/
+    if(os_schedulerRunning != FALSE)
+    {
+        if(TCB == os_currentTCB)
+        {
+            TRIGGER();
+        }
+    }
 }
 
